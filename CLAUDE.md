@@ -10,6 +10,10 @@ memory dir for this project — trust those over assumptions.
 - **After every code change run `scripts/dev/test.sh`** (~5s: syntax, 117 engine/data invariants,
   60-level bot validation). After UI changes, also pixel-verify in the browser preview
   (`.claude/launch.json` → `lanthorn-web`, port 4173, `?debug=1` exposes `LD.*` helpers).
+  On-device QA: Debug iOS builds inject `window.__LANTHORN_DEBUG` (via `#if DEBUG` WKUserScript
+  in MainViewController), surfacing a top-left `≡` dev panel — New / L1 / Last / Done / Win —
+  so the new-user→last-level→ending flow is testable on the phone with no console. Auto-absent
+  from Release builds.
 - **`web/js/engine.js` must stay behavior-identical to `lanthorn-prd/greybox/engine.js`**
   (same RNG draw order, same bot arithmetic). engine-tests cross-check both engines and the PRD
   appendix win rates. Never "improve" engine logic casually.
@@ -45,3 +49,35 @@ Three screens only (title / game / sky), no level browser, no tab bar, linear pr
 button + ✕→title). No near-win assist — any dead-end shows the terse Retry card after the
 "No space left" sweep. One gear menu (home + Sound/BGM/Vibration toggles) on title and in-game.
 All icons are inline SVG or CSS — no emoji/font glyphs except the music notes.
+
+Journey meta (Phase-0 thin slice shipped June 12, 2026): endless levels are chunked into named
+WORLDS you travel out through — scale escalation (home → near sky → deep → beyond), per owner's
+"space travel" idea reframed cozy (NOT literal Mars/Jupiter; warm invented dream-worlds, the
+Moon is the one real name worth keeping). `web/js/planets.js` = the atlas (name + CSS palette +
+horizon-world colors, ~20 levels/world, curated 60 = first 3 worlds Tier 1). Each world is a
+pure-CSS RESKIN (sky gradient via --night1/2, walls via --wall1/2/3, the horizon orb via
+--world1/2) — §0-legal: NO new rules, the paper lantern stays warm gold (constant hero). Sky
+screen shows the current world rising on the horizon (#skyworld) + its name; entering a new
+world fires a textless arrival card (#planetcard). The night sky is PER-PLANET: lanterns counted
+per world in `store.skyByWorld` (worldIndex→count), NOT one global total — each planet has its
+own sky that fills over its 20 levels. The home-screen background draws a "travel trail"
+(FX.setJourney) of world-orbs winding up through the night. Atlas now 10 named worlds + the Moon
+(folded in as world 4) + procedural "Deep Sky" beyond; full 12-world "Arc of Night" design lives
+in session notes; only palettes built so far — painted art is the post-gate cost. Endless difficulty RAMPS with depth (added June 12, 2026 — the flat band-C tail felt unchanged
+at level 1261). `endless.js` scales §0-legal levers by world depth: more lanterns (→6), tighter
+geometry (padWalls → up to 14 blocked), and a descending target bot-win-rate (~0.62 at the first
+endless world → floor 0.32 far out), picking the candidate whose 10-run bot win-rate lands in a
+band around target. Verified: ~95% at L61 → 20-40% plateau by ~L213, holding through the deep
+tail; every level still solvable (authored-queue-winnable + all lanterns lightable), deterministic,
+generates in <35ms. Breathers (every 10th) stay easy relief valleys. NOTE: dev `wonThrough` must
+NOT call levelAt() on generated levels (generating hundreds to total the sky stalled 18s) — it
+sums curated exactly and estimates generated. Endgame = ENDLESS (decided June 12, 2026 after the replay/"caught-up" attempts felt like
+dead-ends; this is Block Blast's real model). Levels 1-60 are curated (`web/js/levels.js`);
+past that, `web/js/genLevel(n)` (`web/js/endless.js`) generates a board deterministically per
+level number — faithful port of `gen-levels.cjs` geometry, validated solvable + kind (band-C
+plateau, ≥0.6 bot in a 12-run check, every lantern lightable, breather every 10th). The
+odometer just keeps climbing ("Level 61"…), win card is always "Continue", and the sky fills
+forever. There is NO all-won/replay/"see your sky" special state anymore. Sky count is a
+running counter `store.sky` (can't be summed from the 60-level table); migrated on load.
+Breather rule (every 10th level archetype-A) holds in both curated and generated ranges — don't
+tighten to every-5 with one mechanic.

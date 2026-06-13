@@ -105,42 +105,40 @@ def _chime(t, parts):
 
 
 def gen_clear():
-    t = t_axis(0.65)
-    x = _chime(t, [
-        (523.25, 0.9, 0.00, 0.22, tri),
-        (1046.5, 0.4, 0.02, 0.26, sine),
-        (783.99, 0.8, 0.06, 0.28, tri),
-        (1568.0, 0.3, 0.08, 0.24, sine),
-    ])
-    x += hiss(t, 0.16, 0.02) * 0.18
-    return finish(saturate(x, 1.5))
+    # NEUTRAL "cleared" whoosh — a quick downward sweep + soft pop, NO bell
+    # chord, so it reads as board management, not a reward (the lantern is the
+    # reward). Low-mid register, short, clearly distinct from gen_lantern.
+    t = t_axis(0.34)
+    body = slide(t, 470, 190, 0.08) * env(t, 0.002, 0.085) * 0.85
+    pop = slide(t, 300, 150, 0.03) * env(t, 0.001, 0.04) * 0.45
+    air = hiss(t, 0.11, 0.0, bright=False) * 0.18   # dark whoosh, not bright hiss
+    return finish(saturate(body + pop + air, 1.3), peak=0.72)
 
 
 def gen_clear2():
-    t = t_axis(0.85)
-    x = _chime(t, [
-        (523.25, 0.9, 0.00, 0.22, tri),
-        (1046.5, 0.4, 0.02, 0.26, sine),
-        (783.99, 0.8, 0.06, 0.30, tri),
-        (1568.0, 0.3, 0.08, 0.26, sine),
-        (1318.5, 0.7, 0.14, 0.34, tri),
-        (2093.0, 0.3, 0.17, 0.30, sine),
-    ])
-    x += hiss(t, 0.2, 0.02) * 0.2
-    return finish(saturate(x, 1.5))
+    # multi-line clear — same neutral whoosh, a little bigger/lower, no chord
+    t = t_axis(0.42)
+    body = slide(t, 540, 200, 0.1) * env(t, 0.002, 0.11) * 0.85
+    body2 = slide(t, 360, 160, 0.06) * env(t, 0.003, 0.08, 0.045) * 0.55
+    air = hiss(t, 0.15, 0.0, bright=False) * 0.2    # dark whoosh
+    return finish(saturate(body + body2 + air, 1.35), peak=0.8)
 
 
 def gen_lantern():
-    t = t_axis(1.1)
+    # THE REWARD — warm bell with shimmer + an ASCENDING sparkle motif, bright
+    # and magical and clearly higher than the clear whoosh: "you lit one".
+    t = t_axis(1.2)
     x = _chime(t, [
-        (660.0, 1.0, 0.0, 0.34, sine),
-        (663.0, 0.5, 0.0, 0.32, sine),    # detune → warm beating
-        (1320.0, 0.35, 0.005, 0.22, sine),
-        (1975.0, 0.15, 0.01, 0.15, sine),
-        (2640.0, 0.07, 0.01, 0.11, sine),
+        (660.0, 1.0, 0.0,   0.42, sine),
+        (663.0, 0.5, 0.0,   0.40, sine),    # detune → warm beating glow
+        (1320.0, 0.42, 0.005, 0.28, sine),
+        (1980.0, 0.18, 0.01,  0.18, sine),
+        (2640.0, 0.08, 0.01,  0.12, sine),
     ])
-    x += hiss(t, 0.09, 0.005) * 0.08
-    return finish(saturate(x, 1.35))
+    for i, f in enumerate([880.0, 1174.7, 1568.0]):   # rising sparkle, the signature
+        x += sine(t, f) * env(t, 0.003, 0.16, 0.05 + i * 0.07) * 0.3
+    x += hiss(t, 0.14, 0.01) * 0.07
+    return finish(saturate(x, 1.4))
 
 
 def gen_win():

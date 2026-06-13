@@ -10,7 +10,8 @@
   const SDK = globalThis.LanthornSDK;
   const N = E.N;
   const $ = (id) => document.getElementById(id);
-  const DEBUG = location.search.includes("debug=1");
+  // browser: ?debug=1 · iOS: DEBUG builds inject window.__LANTHORN_DEBUG (Release excludes it)
+  const DEBUG = location.search.includes("debug=1") || !!window.__LANTHORN_DEBUG;
 
   // ---------- persistence ----------
   const SAVE_KEY = "lanthorn.v1";
@@ -20,11 +21,64 @@
     if (s && Array.isArray(s.won)) store = Object.assign(store, s);
   } catch (e) {}
   function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(store)); } catch (e) {} }
-  function skyTotal() { return LEVELS.reduce((n, lv, i) => n + (store.won[i] ? lv.lanterns.length : 0), 0); }
-  function firstOpen() { for (let i = 0; i < LEVELS.length; i++) if (!store.won[i]) return i; return LEVELS.length - 1; }
+  const WORLD_SIZE = 20;                       // levels per world (matches planets.js SIZE)
+  const worldOf = i => Math.floor(i / WORLD_SIZE);
+  // Each world has its OWN night sky — lanterns are counted per planet, not as
+  // one global total. skyByWorld: { worldIndex -> lantern count }. Migrate
+  // older saves (single store.sky) by re-bucketing per world.
+  if (!store.skyByWorld || typeof store.skyByWorld !== "object") {
+    store.skyByWorld = {};
+    for (let k = 0; k < store.won.length; k++) {
+      if (!store.won[k]) continue;
+      const w = worldOf(k), lant = k < LEVELS.length ? LEVELS[k].lanterns.length : 4;  // estimate generated
+      store.skyByWorld[w] = (store.skyByWorld[w] || 0) + lant;
+    }
+    delete store.sky;
+  }
+  function skyOf(w) { return store.skyByWorld[w] || 0; }
+  function firstOpen() { let i = 0; while (store.won[i]) i++; return i; }   // unbounded — endless tail
+  function curWorld() { return worldOf(firstOpen()); }   // the planet you're currently in
+  // levels 1-60 are the curated set; beyond that they're generated on the fly
+  // (deterministic per number), so the odometer never hits a wall.
+  function levelAt(i) { return i < LEVELS.length ? LEVELS[i] : genLevel(i + 1); }
+
+  // debug-only teleport helpers (used by the dev panel + LD console). Mark
+  // every level up to idx as won and keep the sky count honest, so jumping
+  // deep behaves as if you'd genuinely arrived there.
+  function wonThrough(idx) {
+    store.won = []; store.skyByWorld = {}; store.tutDone = true;
+    // per-world buckets: curated exact, generated estimated (never generate
+    // here — generating hundreds of levels just to total the sky would stall).
+    for (let k = 0; k < idx; k++) {
+      store.won[k] = true;
+      const lant = k < LEVELS.length ? LEVELS[k].lanterns.length : 4;
+      const w = worldOf(k);
+      store.skyByWorld[w] = (store.skyByWorld[w] || 0) + lant;
+    }
+  }
+  function jumpToLevel(idx) { idx = Math.max(0, idx); wonThrough(idx); save(); startLevel(idx); }
+  function jumpToWorld(w) { jumpToLevel(Math.max(0, w) * PLANETS.SIZE); }   // first level of world w (0-based)
 
   Snd.muted = !store.sound;
   Snd.haptics = store.haptics;
+
+  // ---------- journey / planets ----------
+  const PLANETS = globalThis.LANTHORN_PLANETS;
+  let shownPlanetIdx = -1;
+  function applyPlanet(p) {                       // reskin the sky, walls & horizon-world
+    const r = document.documentElement.style;
+    r.setProperty("--night1", p.night1); r.setProperty("--night2", p.night2);
+    r.setProperty("--wall1", p.wall[0]); r.setProperty("--wall2", p.wall[1]); r.setProperty("--wall3", p.wall[2]);
+    r.setProperty("--world1", p.world[0]); r.setProperty("--world2", p.world[1]);
+    if (globalThis.FX && FX.setPlanet) FX.setPlanet(p);   // each world's starfield
+  }
+  function arrive(p) {                             // the "a new world rises" beat
+    const card = $("planetcard");
+    card.innerHTML = p.name + "<small>TIER " + p.tier + "</small>";
+    card.classList.add("show");
+    clearTimeout(arrive._t);
+    arrive._t = setTimeout(() => card.classList.remove("show"), 2000);
+  }
 
   // ---------- screens ----------
   const screens = { title: $("scr-title"), game: $("scr-game"), sky: $("scr-sky") };
@@ -43,15 +97,33 @@
     if (name === "title") $("titleMenuSlot").appendChild($("menuWrap"));
     else if (name === "game") $("hudMenuSlot").appendChild($("menuWrap"));
     $("btnHome").style.display = name === "title" ? "none" : "";  // ⌂ is noise on home
-    FX.setScene(name, { skyCount: skyTotal() });
+    const here = skyOf(curWorld());                // lanterns lit in the current planet's sky
+    FX.setScene(name, { skyCount: here });
     if (name === "title") {
-      // the Play button is the level odometer (Royal Match pattern)
-      $("btnPlay").textContent = store.won[LEVELS.length - 1] ? "Play again" : "Level " + (firstOpen() + 1);
-      $("btnSkyLabel").textContent = skyTotal() ? `Night sky · ${skyTotal()}` : "Night sky";
+      // Play button is the level odometer (Royal Match pattern); levels are
+      // endless, so it always points at the next one.
+      $("btnPlay").textContent = "Level " + (firstOpen() + 1);
+      $("btnSkyLabel").textContent = here ? `Night sky · ${here}` : "Night sky";
     }
-    if (name === "sky") $("skyCount").innerHTML = skyTotal()
-      ? `<b>${skyTotal()}</b> lantern${skyTotal() === 1 ? "" : "s"} released into your sky`
-      : "Your sky is waiting — light some lanterns.";
+    if (name === "sky") {
+      $("skyCount").innerHTML = here
+        ? `<b>${here}</b> lantern${here === 1 ? "" : "s"} lit in this sky`
+        : "This sky is waiting — light some lanterns.";
+      const p = PLANETS.planetFor(firstOpen());
+      applyPlanet(p);                              // home/sky reflect the world you're in
+      $("skyplace").textContent = p.name;
+    }
+    if (name === "title") {
+      applyPlanet(PLANETS.planetFor(firstOpen()));
+      // travel trail: a couple of worlds behind you (nearest) up through the ones ahead
+      const cur = PLANETS.indexFor(firstOpen());
+      const nodes = [];
+      for (let w = Math.max(0, cur - 2); w <= cur + 4; w++) {
+        const p = PLANETS.planetFor(w * PLANETS.SIZE);
+        nodes.push({ color: p.world[0], glow: p.world[1], current: w === cur });
+      }
+      if (FX.setJourney) FX.setJourney(nodes);
+    }
   }
 
   // ---------- layout ----------
@@ -80,15 +152,21 @@
   function startLevel(i) {
     quitTelemetry();             // restarting mid-level also abandons a run
     levelIdx = i;
-    g = E.newGame(LEVELS[i]);
+    g = E.newGame(levelAt(i));
     released.clear();
     uiSlots = [0, 1, 2];
     $("nospace").classList.remove("show");
     hideOverlay();
+    // step into this level's world: reskin, and announce it if it's new
+    const pIdx = PLANETS.indexFor(i), p = PLANETS.planetFor(i);
+    applyPlanet(p);
+    if (pIdx !== shownPlanetIdx) { arrive(p); shownPlanetIdx = pIdx; }
     show("game");
     render();
     SDK.gameplayStart();
     Track.ev("level_start", { level: g.level.id });
+    const dn = document.querySelector(".devnow");   // keep the dev label honest however we got here
+    if (dn) dn.textContent = `L${levelIdx + 1} · ${p.name}`;
   }
 
   function render(flash) {
@@ -244,7 +322,9 @@
     render(res.cleared);
     const nLines = res.cleared.rows.length + res.cleared.cols.length;
     if (nLines) {
-      Snd.clear(nLines);
+      // lighting a lantern is the goal — its sound owns the moment; a plain
+      // clear (no lantern) gets the neutral "cleared" whoosh instead.
+      if (!litNow.length) Snd.clear(nLines);
       const rects = [];
       for (const r of res.cleared.rows) for (let c = 0; c < N; c++) rects.push(cells[r * N + c].getBoundingClientRect());
       for (const c of res.cleared.cols) for (let r = 0; r < N; r++) rects.push(cells[r * N + c].getBoundingClientRect());
@@ -252,8 +332,8 @@
       boardEl.classList.add("pulse");
       setTimeout(() => boardEl.classList.remove("pulse"), 130);
     }
+    if (litNow.length) Snd.lantern();   // the distinct reward chime, once
     for (const ln of litNow) {
-      Snd.lantern();
       const rect = cells[ln.r * N + ln.c].getBoundingClientRect();
       setTimeout(() => {
         FX.floatLantern(rect);
@@ -307,20 +387,24 @@
     SDK.gameplayStop();
     if (g.won) {
       overlay.classList.add("winlight");
-      Track.ev("level_win", { level: g.level.id, pieces: g.piecesUsed, first: !store.won[levelIdx] });
-      store.won[levelIdx] = true; save();
+      const firstClear = !store.won[levelIdx];
+      Track.ev("level_win", { level: g.level.id, pieces: g.piecesUsed, first: firstClear });
+      store.won[levelIdx] = true;
+      if (firstClear) {                                       // count into this world's own sky
+        const w = worldOf(levelIdx);
+        store.skyByWorld[w] = (store.skyByWorld[w] || 0) + g.level.lanterns.length;
+      }
+      save();
       Snd.win(); SDK.happytime();
       FX.celebrate(boardEl.getBoundingClientRect());
       hero.classList.remove("sad");
       heroLan.classList.add("lit-lan");
-      badge.style.display = "";
-      badge.textContent = "+" + g.level.lanterns.length;
+      // a replayed (already-lit) level adds nothing to the sky — drop the +N badge
+      if (firstClear) { badge.style.display = ""; badge.textContent = "+" + g.level.lanterns.length; }
+      else badge.style.display = "none";
       dots.style.display = "none";
-      if (levelIdx < LEVELS.length - 1) {
-        addBtn(b, "Continue", () => { Snd.ui(); startLevel(levelIdx + 1); }, "primary wide");
-      } else {
-        addBtn(b, "See your sky", () => { Snd.ui(); hideOverlay(); show("sky"); }, "primary wide");
-      }
+      // levels are endless — always a next one to continue to
+      addBtn(b, "Continue", () => { Snd.ui(); startLevel(levelIdx + 1); }, "primary wide");
     } else {
       Track.ev("level_fail", { level: g.level.id, lit: g.lanterns.filter(l => l.lit).length,
                                lanterns: g.lanterns.length });
@@ -380,14 +464,17 @@
   window.addEventListener("resize", layout);
   window.addEventListener("keydown", e => {
     if (!DEBUG || current !== "game") return;
-    if (e.key === "n" && levelIdx < LEVELS.length - 1) startLevel(levelIdx + 1);
+    if (e.key === "n") startLevel(levelIdx + 1);           // endless — no upper bound
     if (e.key === "p" && levelIdx > 0) startLevel(levelIdx - 1);
   });
 
   // ---------- debug hooks (?debug=1) for dev + screenshot harness ----------
   if (DEBUG) {
     window.LD = {
-      goto: n => startLevel(n - 1),
+      goto: n => startLevel(n - 1),                 // raw jump (no progress marked)
+      jump: n => jumpToLevel(n - 1),                // jump to level n, marking everything before it won
+      world: w => jumpToWorld(w - 1),               // jump to the start of world w (1-based)
+      worlds: () => PLANETS.ATLAS.map((p, i) => `${i + 1}. ${p.name} (Tier ${p.tier}, levels ${i * PLANETS.SIZE + 1}-${(i + 1) * PLANETS.SIZE})`),
       winNow() { g.lanterns.forEach(l => l.lit = true); g.over = true; g.won = true; render(); showEnd(); },
       failNow(unlit) {
         const k = unlit === undefined ? 2 : unlit;   // leave k lanterns unlit, force the card
@@ -405,6 +492,41 @@
       game: () => g,
       render: () => render()
     };
+    buildDevBar();
+  }
+
+  // On-device QA panel (debug builds only): tap ≡ top-left to teleport anywhere
+  // in the journey without playing through — New user, jump to any level, step
+  // world-by-world (◀W / W▶, each shows that world's palette + arrival + sky),
+  // and Win the current level. Auto-absent from Release builds.
+  function buildDevBar() {
+    const wrap = document.createElement("div");
+    wrap.id = "devbar";
+    const toggle = document.createElement("button");
+    toggle.className = "devtoggle"; toggle.textContent = "≡";
+    toggle.onclick = () => wrap.classList.toggle("open");
+    const row = document.createElement("div"); row.className = "devrow";
+    const label = document.createElement("span"); label.className = "devnow";
+    const refresh = () => {
+      const p = PLANETS.planetFor(levelIdx);
+      label.textContent = `L${levelIdx + 1} · ${p.name}`;
+    };
+    const mk = (text, fn) => {
+      const b = document.createElement("button");
+      b.textContent = text;
+      b.onclick = () => { fn(); refresh(); if (!/World/.test(text)) wrap.classList.remove("open"); };
+      row.appendChild(b);
+    };
+    mk("New", () => { store.won = []; store.skyByWorld = {}; store.tutDone = false; save(); hideOverlay(); show("title"); });
+    mk("Lvl#", () => { const n = parseInt(prompt("Jump to level number", String(levelIdx + 1)), 10); if (n > 0) jumpToLevel(n - 1); });
+    mk("◀ World", () => jumpToWorld(PLANETS.indexFor(levelIdx) - 1));   // start of previous world
+    mk("World ▶", () => jumpToWorld(PLANETS.indexFor(levelIdx) + 1));   // start of next world
+    mk("Last W", () => jumpToWorld(PLANETS.ATLAS.length - 1));          // last named world (The Veil)
+    mk("Last L", () => jumpToLevel(PLANETS.ATLAS.length * PLANETS.SIZE - 1));  // last charted level (200)
+    mk("Win", () => { if (g && !g.over) { g.lanterns.forEach(l => l.lit = true); g.over = true; g.won = true; render(); showEnd(); } });
+    row.appendChild(label); refresh();
+    wrap.appendChild(toggle); wrap.appendChild(row);
+    document.body.appendChild(wrap);
   }
 
   // ---------- boot ----------

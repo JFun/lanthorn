@@ -32,7 +32,12 @@ Generosity rules: no lives, no energy, no timer anywhere; soft fail = instant fr
 ## §3 Scope
 
 **MVP (web, weeks 1–6):**
-- 60 designed levels (validated by bot + 10-person fun gate on levels 1–20)
+- 60 designed levels (validated by bot + 10-person fun gate on levels 1–20), then an **endless
+  generated tail** so the odometer never hits a wall *(amended June 12, 2026: levels 61+ are
+  generated deterministically per level number, validated solvable + kind at a cozy band-C
+  plateau — Block Blast's endless-alongside-designed model, chosen over a "caught up, more
+  coming" dead-end after device testing. The post-gate pipeline still curates more hand-designed
+  levels to extend the front of the campaign.)*
 - Core loop, night-sky meta screen (lanterns accumulate; pure collection, no economy)
 - One goal type only (light the lantern). One board size (8×8).
 - CrazyGames SDK integration; their 48h homepage = launch audience. Poki submission after.

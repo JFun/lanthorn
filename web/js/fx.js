@@ -8,6 +8,9 @@
   let bg, fx, bgx, fxx, W = 0, H = 0, DPR = 1;
   let scene = "title";
   let ambientTarget = 0;
+  let starColor = "#cdd6ff";    // each world has its own starfield (tint + density)
+  let starCount = 130;
+  let journey = [];             // worlds strung along the home-screen travel trail
 
   const stars = [];
   const ambient = [];   // drifting sky lanterns (bg canvas)
@@ -38,12 +41,75 @@
   FX.setScene = function (name, opts) {
     scene = name;
     if (name === "sky") ambientTarget = Math.min(48, (opts && opts.skyCount) || 0);
-    else if (name === "title") ambientTarget = Math.min(10, 2 + ((opts && opts.skyCount) || 0));
+    else if (name === "title") ambientTarget = Math.min(3, (opts && opts.skyCount) || 0);  // a few; the journey trail leads
     else ambientTarget = 0;
     // Lanterns released in past sessions are already aloft — scatter them
     // across the sky instead of queueing them all at the bottom edge.
     while (ambient.length < ambientTarget) spawnAmbient(false);
   };
+
+  // each world's air: star tint + how many of the field show (density 0-1)
+  FX.setPlanet = function (p) {
+    if (!p) return;
+    starColor = p.star || "#cdd6ff";
+    starCount = Math.round(stars.length * (p.density != null ? p.density : 0.7));
+  };
+
+  // the home-screen travel trail: an ordered list of worlds from a couple
+  // passed (nearest, bottom) up through the ones ahead (receding, top).
+  // [{ color, glow, current }]
+  FX.setJourney = function (nodes) { journey = nodes || []; };
+
+  // a luminous thread winding up through the night, soft world-orbs strung
+  // along it — cozy "you are travelling out through the worlds", not a map.
+  function drawJourney(t) {
+    const n = journey.length;
+    const cx = W * 0.5, bottom = H * 0.92, top = H * 0.05;
+    const pos = (k) => {                                  // k = 0 (bottom/near) .. n-1 (top/far)
+      const f = k / Math.max(1, n - 1);
+      const y = bottom + (top - bottom) * f;
+      const x = cx + Math.sin(f * 3.4 + 0.5) * W * 0.26 * (1 - f * 0.2);
+      const scale = 1 - f * 0.58;                         // recede with distance
+      return { x, y, scale, f };
+    };
+    // the thread — soft dots between nodes, fading toward the far end
+    bgx.save();
+    for (let k = 0; k < n - 1; k++) {
+      const a = pos(k), b = pos(k + 1);
+      const steps = 9;
+      for (let s = 1; s < steps; s++) {
+        const u = s / steps, x = a.x + (b.x - a.x) * u, y = a.y + (b.y - a.y) * u;
+        const fade = (1 - (k + u) / n * 0.7) * 0.7;
+        bgx.globalAlpha = fade;
+        bgx.fillStyle = "#ffe0b0";
+        bgx.beginPath(); bgx.arc(x, y, 2.1 * a.scale, 0, Math.PI * 2); bgx.fill();
+      }
+    }
+    // the world-orbs
+    for (let k = 0; k < n; k++) {
+      const p = pos(k), nd = journey[k];
+      const r = (nd.current ? 16 : 11) * p.scale;
+      const halo = bgx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 2.6);
+      halo.addColorStop(0, nd.color); halo.addColorStop(0.5, nd.glow); halo.addColorStop(1, "rgba(0,0,0,0)");
+      bgx.globalAlpha = 0.5 + 0.3 * (1 - p.f);
+      bgx.fillStyle = halo;
+      bgx.beginPath(); bgx.arc(p.x, p.y, r * 2.6, 0, Math.PI * 2); bgx.fill();
+      // the world body
+      const body = bgx.createRadialGradient(p.x - r * 0.3, p.y - r * 0.3, 0, p.x, p.y, r);
+      body.addColorStop(0, nd.color); body.addColorStop(1, nd.glow);
+      bgx.globalAlpha = 0.75 + 0.25 * (1 - p.f);
+      bgx.fillStyle = body;
+      bgx.beginPath(); bgx.arc(p.x, p.y, r, 0, Math.PI * 2); bgx.fill();
+      if (nd.current) {                                   // a soft pulse on "you are here"
+        const pr = r * (1.7 + 0.25 * Math.sin(t * 2.2));
+        bgx.globalAlpha = 0.3 + 0.15 * Math.sin(t * 2.2);
+        bgx.strokeStyle = "#fff0c8"; bgx.lineWidth = 1.5;
+        bgx.beginPath(); bgx.arc(p.x, p.y, pr, 0, Math.PI * 2); bgx.stroke();
+      }
+    }
+    bgx.restore();
+    bgx.globalAlpha = 1;
+  }
 
   function spawnAmbient(fromBottom) {
     ambient.push({
@@ -151,13 +217,15 @@
 
     // bg: stars + ambient lanterns
     bgx.clearRect(0, 0, W, H);
-    for (const s of stars) {
+    bgx.fillStyle = starColor;
+    for (let i = 0; i < starCount; i++) {
+      const s = stars[i];
       const tw = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * s.sp + s.ph));
       bgx.globalAlpha = tw;
-      bgx.fillStyle = "#cdd6ff";
       bgx.beginPath(); bgx.arc(s.x * W, s.y * H * 0.9, s.r, 0, Math.PI * 2); bgx.fill();
     }
     bgx.globalAlpha = 1;
+    if (scene === "title" && journey.length) drawJourney(t);
     while (ambient.length < ambientTarget) spawnAmbient(ambient.length > 4);
     while (ambient.length > ambientTarget) ambient.shift();
     for (const a of ambient) {
