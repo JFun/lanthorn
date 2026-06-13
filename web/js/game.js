@@ -371,12 +371,26 @@
 
   // ---------- overlays ----------
   const overlay = $("overlay");
-  function hideOverlay() { overlay.classList.remove("show", "winlight"); }
+  function hideOverlay() { overlay.classList.remove("show", "winlight", "worldcard"); }
   // End card, Royal Match shape: level banner on top, one celebratory line,
   // lantern centerpiece with the sky reward, a single Continue, X to close.
   // Both end cards are wordless and mirrored: win = lit lantern + reward
   // badge; fail = the same lantern unlit, swaying, over a dots row showing
   // how close the run got.
+  // the world-complete flourish: a wave of lanterns drifts up across the whole
+  // screen (the planet's sky visibly filling) over a couple of extra spark bursts.
+  function skyBloom() {
+    const W = innerWidth, H = innerHeight;
+    for (let i = 0; i < 11; i++) {
+      const x = W * (0.08 + 0.84 * (i + 0.5) / 11) + (i % 2 ? -16 : 16);
+      const y = H * (0.58 + 0.26 * (((i * 7) % 5) / 5));
+      const sz = 32 + (i % 3) * 9;
+      setTimeout(() => FX.floatLantern({ left: x - sz / 2, top: y, width: sz, height: sz }), i * 85);
+    }
+    setTimeout(() => FX.celebrate({ left: W * 0.5 - 40, top: H * 0.33, width: 80, height: 1 }), 240);
+    setTimeout(() => FX.celebrate({ left: W * 0.5 - 40, top: H * 0.30, width: 80, height: 1 }), 520);
+  }
+
   function showEnd() {
     const t = $("ovTitle"), p = $("ovText"), b = $("ovBtns");
     const hero = $("ovHero"), heroLan = hero.querySelector(".lan");
@@ -399,14 +413,31 @@
         store.skyByWorld[w] = (store.skyByWorld[w] || 0) + g.level.lanterns.length;
       }
       save();
-      Snd.win(); SDK.happytime();
+      SDK.happytime();
       FX.celebrate(boardEl.getBoundingClientRect());
-      hero.classList.remove("sad");
-      heroLan.classList.add("lit-lan");
-      // a replayed (already-lit) level adds nothing to the sky — drop the +N badge
-      if (firstClear) { badge.style.display = ""; badge.textContent = "+" + g.level.lanterns.length; }
-      else badge.style.display = "none";
       dots.style.display = "none";
+      // clearing a world's LAST level (first time) is a milestone: that planet's
+      // whole night sky is now full. Swap the lantern hero for the glowing world
+      // itself and let lanterns rise across the card before the next world rises.
+      const worldDone = firstClear && (levelIdx % WORLD_SIZE === WORLD_SIZE - 1);
+      if (worldDone) {
+        const wp = PLANETS.planetFor(levelIdx);
+        overlay.classList.add("worldcard");
+        hero.style.display = "none";
+        badge.style.display = "none";
+        $("ovLevel").textContent = wp.name;
+        t.textContent = "World complete"; t.style.display = "";
+        $("ovWorldCount").textContent = "✦ " + skyOf(worldOf(levelIdx));
+        Snd.win(); setTimeout(() => Snd.lantern(), 480);   // win fanfare blooms into the reward bell
+        skyBloom();
+      } else {
+        Snd.win();
+        hero.classList.remove("sad");
+        heroLan.classList.add("lit-lan");
+        // a replayed (already-lit) level adds nothing to the sky — drop the +N badge
+        if (firstClear) { badge.style.display = ""; badge.textContent = "+" + g.level.lanterns.length; }
+        else badge.style.display = "none";
+      }
       // levels are endless — always a next one to continue to
       addBtn(b, "Continue", () => { Snd.ui(); startLevel(levelIdx + 1); }, "primary wide");
     } else {

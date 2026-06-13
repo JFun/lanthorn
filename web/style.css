@@ -297,6 +297,40 @@ button.ghostbtn {
   color: #3a2412; font-size: 15px; font-weight: 800;
   box-shadow: 0 0 10px rgba(255, 170, 60, 0.45);
 }
+/* world-complete milestone: the lantern hero swaps for the world itself —
+   a glowing lit sphere in this planet's colors, ringed in amber to read as
+   "its whole night sky just filled". */
+.ovworld { position: relative; width: 118px; height: 118px; margin: 12px auto 16px; display: none; }
+#overlay.worldcard .ovhero { display: none; }
+#overlay.worldcard .ovworld { display: block; }
+.ovworld .orb {
+  position: absolute; inset: 8px; border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 120%, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0) 58%),
+    radial-gradient(circle at 36% 31%, var(--world2), var(--world1) 58%,
+      color-mix(in srgb, var(--world1) 42%, #05030a) 100%);
+  box-shadow:
+    0 0 30px 4px var(--world2),
+    0 0 64px 14px color-mix(in srgb, var(--world2) 42%, transparent),
+    inset -9px -11px 22px rgba(0, 0, 0, 0.5),
+    inset 7px 9px 16px rgba(255, 255, 255, 0.1);
+  animation: orbpulse 2.8s ease-in-out infinite;
+}
+.ovworld::before {                       /* the amber "sky is full of light" halo */
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255, 190, 90, 0.3), 0 0 26px 5px rgba(255, 180, 80, 0.22);
+}
+@keyframes orbpulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50%      { transform: scale(1.04); filter: brightness(1.13); }
+}
+#ovWorldCount {
+  position: absolute; right: -10px; bottom: 6px; z-index: 1;
+  padding: 4px 12px; border-radius: 999px;
+  background: linear-gradient(180deg, var(--amber-hi), var(--amber));
+  color: #3a2412; font-size: 15px; font-weight: 800; white-space: nowrap;
+  box-shadow: 0 0 12px rgba(255, 170, 60, 0.5);
+}
 #overlay button.primary.wide { display: block; width: 100%; padding: 14px 0; font-size: 17px; border-radius: 14px; }
 
 /* ---------- meta navigation (two surfaces, no bar) ---------- */

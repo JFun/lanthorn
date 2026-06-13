@@ -46,8 +46,14 @@ memory dir for this project — trust those over assumptions.
 
 Three screens only (title / game / sky), no level browser, no tab bar, linear progression
 ("Level N" button = odometer). End cards are textless (LEVEL pill + lantern hero + one wide
-button + ✕→title). No near-win assist — any dead-end shows the terse Retry card after the
-"No space left" sweep. One gear menu (home + Sound/BGM/Vibration toggles) on title and in-game.
+button + ✕→title). EXCEPTION — the world-complete milestone (first clear of a world's last level,
+levelIdx % 20 === 19): the lantern hero swaps for a glowing per-world planet ORB (#ovWorld, lit
+via --world1/2), pill = world name, a single "World complete" label, ✦N sky-count chip, and a
+skyBloom() wave of rising lanterns + double spark burst; Continue → next world's arrival card.
+Mirrors the comps' "Area/Chapter Complete" beat — the one labelled card, fires once per world.
+The in-game HUD also shows the current world name (#hudWorld) under "Level N" + a progress bar
+(#worldbar/#worldfill) that fills across the 20 levels and resets each boundary. No near-win
+assist — any dead-end shows the terse Retry card after the "No space left" sweep. One gear menu (home + Sound/BGM/Vibration toggles) on title and in-game.
 All icons are inline SVG or CSS — no emoji/font glyphs except the music notes.
 
 Journey meta (Phase-0 thin slice shipped June 12, 2026): endless levels are chunked into named
