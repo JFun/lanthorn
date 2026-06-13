@@ -181,7 +181,8 @@
       let inner = "";
       if (ln) {
         if (released.has(r + "," + c)) cls += " released";
-        else inner = `<div class="lan${ln.lit ? " lit-lan" : ""}"></div>`;
+        // until the first lantern is ever lit, dim lanterns pulse to telegraph the goal
+        else inner = `<div class="lan${ln.lit ? " lit-lan" : (store.tutDone ? "" : " hint")}"></div>`;
       }
       d.className = cls;
       if (d.innerHTML !== inner) d.innerHTML = inner;
