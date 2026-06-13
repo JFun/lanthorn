@@ -74,7 +74,7 @@
   }
   function arrive(p) {                             // the "a new world rises" beat
     const card = $("planetcard");
-    card.innerHTML = p.name + "<small>TIER " + p.tier + "</small>";
+    card.innerHTML = "<small>NEW WORLD</small>" + p.name;   // tier is an internal label, not for players
     card.classList.add("show");
     clearTimeout(arrive._t);
     arrive._t = setTimeout(() => card.classList.remove("show"), 2000);
@@ -380,15 +380,18 @@
   // the world-complete flourish: a wave of lanterns drifts up across the whole
   // screen (the planet's sky visibly filling) over a couple of extra spark bursts.
   function skyBloom() {
-    const W = innerWidth, H = innerHeight;
-    for (let i = 0; i < 11; i++) {
-      const x = W * (0.08 + 0.84 * (i + 0.5) / 11) + (i % 2 ? -16 : 16);
-      const y = H * (0.58 + 0.26 * (((i * 7) % 5) / 5));
-      const sz = 32 + (i % 3) * 9;
-      setTimeout(() => FX.floatLantern({ left: x - sz / 2, top: y, width: sz, height: sz }), i * 85);
+    const W = innerWidth, H = innerHeight, N = 16;
+    for (let i = 0; i < N; i++) {
+      const x = W * (0.06 + 0.88 * (i + 0.5) / N) + (i % 2 ? -18 : 18);
+      const y = H * (0.55 + 0.32 * (((i * 7) % 5) / 5));
+      const sz = 30 + (i % 4) * 9;
+      setTimeout(() => FX.floatLantern({ left: x - sz / 2, top: y, width: sz, height: sz }), i * 70);
     }
-    setTimeout(() => FX.celebrate({ left: W * 0.5 - 40, top: H * 0.33, width: 80, height: 1 }), 240);
-    setTimeout(() => FX.celebrate({ left: W * 0.5 - 40, top: H * 0.30, width: 80, height: 1 }), 520);
+    // bursts radiating from the planet itself (card centre), then a wider one
+    const orb = { left: W * 0.5 - 40, top: H * 0.33, width: 80, height: 1 };
+    FX.celebrate(orb);
+    setTimeout(() => FX.celebrate(orb), 230);
+    setTimeout(() => FX.celebrate({ left: W * 0.5 - 60, top: H * 0.29, width: 120, height: 1 }), 470);
   }
 
   function showEnd() {
