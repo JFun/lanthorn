@@ -28,7 +28,7 @@ Syntax-checks everything, runs 117 engine/data invariants (`engine-tests.cjs`), 
 node scripts/dev/gen-levels.cjs
 ```
 
-Deterministic (fixed master seed). Pipeline per [lanthorn-prd/01-level-design-spec.md](lanthorn-prd/01-level-design-spec.md): archetype geometry → lantern rules → 30-run bot screen → authored-queue-winnable check → 100-run band validation (+ "every lantern lightable" fairness rule) → win%-descending sort within band, breathers pinned every 10th level. All 10 greybox kit levels are kept, redistributed to positions lawful under the position bands (A=1–10, B=11–30, C=31–60).
+Deterministic (fixed master seed). Pipeline per [lanthorn-prd/01-level-design-spec.md](lanthorn-prd/01-level-design-spec.md): archetype geometry → lantern rules → 30-run bot screen → authored-queue-winnable check → 100-run band validation (+ "every lantern lightable" fairness rule) → sort within band, then the world-arc: archetype-A breathers pinned at world midpoints (10, 30, 50) and the hardest levels pinned at world finales (20, 40, 60), so each 20-level world ramps to a climax. All 10 greybox kit levels are kept, redistributed to positions lawful under the position bands (A=1–10, B=11–30, C=31–60).
 
 ## iPhone build (Capacitor)
 

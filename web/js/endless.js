@@ -4,9 +4,10 @@
    DETERMINISTICALLY to one board (same seed every player, same as a designed
    level — "a level is a designed object, not a slot machine"), validated
    solvable + kind via the same engine the curated set was built with.
-   Difficulty holds at a cozy band-C plateau (no brutal ramp) with an
-   archetype-A breather every 10th. Faithful port of scripts/dev/gen-levels.cjs
-   geometry. */
+   Difficulty ramps with world depth (no brutal spike); each 20-level world
+   eases in, dips to an archetype-A breather at its midpoint, and ends on its
+   hardest level (the climax the World-complete card pays off). Faithful port
+   of scripts/dev/gen-levels.cjs geometry. */
 (function (root) {
   "use strict";
   const E = root.LanthornEngine;
@@ -20,19 +21,27 @@
     // deterministic per-n RNG: hash n so adjacent levels don't look alike
     const rng = E.makeRNG((Math.imul(n, 2654435761) ^ 0x9e3779b9) >>> 0);
     const rInt = m => Math.floor(rng() * m);
-    const breather = n % 10 === 0;
-    const arch = breather ? "A" : CYCLE[(n - 61) % CYCLE.length];
+    // each 20-level world ramps to a climax: relief valley at its MIDPOINT
+    // (…,70,90,110), hardest level at its FINALE (…,80,100,120) — the one the
+    // World-complete card pays off. (NOT every 10th easy — that put the easiest
+    // level last, backwards from the genre.)
+    const breather = n % 20 === 10;
+    const finale = n % 20 === 0;
+    // finale forces a TIGHT geometry (E/F are the low-win-rate archetypes in the
+    // curated data) so the world climax is reliably hard, not a cycle fluke.
+    const arch = breather ? "A" : (finale ? (Math.floor(n / 20) % 2 ? "F" : "E") : CYCLE[(n - 61) % CYCLE.length]);
 
     // ----- depth-scaled difficulty (§0-legal levers only: more lanterns,
     // tighter geometry, lower target win-rate). Ramps from a band-C feel at the
-    // first endless world toward band-D and a gentle expert floor far out, but
-    // every board stays solvable and every 10th level is an easy relief valley.
+    // first endless world toward band-D and a gentle expert floor far out; the
+    // world finale is a notch harder again, every board still solvable & fair.
     const worldIdx = Math.floor((n - 1) / 20);       // 3 = first endless world (The Moon)
     const depth = Math.max(0, worldIdx - 3);
-    const targetWin = breather ? 0.82 : Math.max(0.32, 0.62 - depth * 0.022);
+    const base = Math.max(0.32, 0.62 - depth * 0.022);
+    const targetWin = breather ? 0.82 : base;   // finale ignores this — it takes the hardest board found
     const maxWalls = breather ? 0 : Math.min(MAX_BLOCKED, 5 + depth);
     const lanternBase = breather ? Math.min(5, 3 + Math.floor(depth / 6))
-                                 : Math.min(6, 4 + Math.floor(depth / 3));
+                                 : Math.min(6, 4 + Math.floor(depth / 3) + (finale ? 1 : 0));
 
     function genBlocked(a) {
       switch (a) {
@@ -123,9 +132,11 @@
     // in a few dozen ms even deep in the tail.
     const lo = targetWin - 0.07, hi = targetWin + 0.10;
     let lanternCount = lanternBase;
-    let best = null, bestErr = Infinity;
+    let best = null, bestErr = Infinity;       // non-finale: board closest to the depth target
+    let hard = null, hardWin = Infinity;       // finale: the hardest fair board found = the world climax
+    const attempts = finale ? 26 : 18;         // scan a few more for the finale so its min is a real peak
     for (let round = 0; round < 2; round++) {
-      for (let attempt = 0; attempt < 18; attempt++) {
+      for (let attempt = 0; attempt < attempts; attempt++) {
         let blocked = genBlocked(arch);
         if (!blocked) continue;
         if (!breather) blocked = padWalls(blocked);
@@ -135,16 +146,28 @@
         const seed = 300000 + rInt(2000000);
         const cand = { id: n, band: "C", blocked, lanterns, seed, archetype: arch };
         if (!E.botPlay(cand, cand.seed).won) continue;          // solvable from its authored queue
-        const sim = E.simulateLevel(cand, 10);
+        // finale picks the HARDEST board, so it needs a low-noise estimate to
+        // choose well (10-run variance would pick a fluke); bodies stay cheap.
+        const sim = E.simulateLevel(cand, finale ? 28 : 10);
         if (sim.lanternLitCounts.some(x => x === 0)) continue;  // every lantern lightable
-        if (sim.winRate < 0.28) continue;                       // fairness floor — never near-impossible
+        // fairness floor — never near-impossible. The finale min-PICKS the
+        // hardest fair board, so it needs headroom above true-unfair (noise near
+        // a low floor overshoots into walls); 0.42 keeps the climax hard but
+        // always winnable. Deep, every level is hard, so the finale reads as a
+        // fair-but-tough cap + the World-complete payoff rather than a spike.
+        if (sim.winRate < (finale ? 0.42 : 0.30)) continue;
         cand.par = sim.bestPieces || lanterns.length;
+        if (finale) {                                           // climax: keep the hardest, scan them all
+          if (sim.winRate < hardWin) { hardWin = sim.winRate; hard = cand; }
+          continue;
+        }
         if (sim.winRate >= lo && sim.winRate <= hi) { cache[n] = cand; return cand; }
         const err = Math.abs(sim.winRate - targetWin);
         if (err < bestErr) { bestErr = err; best = cand; }
       }
       lanternCount = Math.max(2, lanternCount - 1);             // relief valve if nothing valid
     }
+    if (finale && hard) { cache[n] = hard; return hard; }
     if (best) { cache[n] = best; return best; }
     // last-resort fallback: trivial open board (should never be reached)
     const fb = { id: n, band: "C", blocked: [], lanterns: [[2,2],[5,5]], seed: 300000 + n, archetype: "A", par: 4 };

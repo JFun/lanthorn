@@ -15,7 +15,9 @@
       "C": { "levels": "31-60", "humanWinTarget": 0.88, "botWinMin": 0.55 },
       "D": { "levels": "61+",   "humanWinTarget": 0.85, "botWinMin": 0.40 }
     },
-    "breatherEvery": 10
+    "worldSize": 20,
+    "breatherAtWorldMidpoint": { "levels": "10, 30, 50, …", "archetype": "A", "note": "easy relief valley mid-world" },
+    "peakAtWorldFinale": { "levels": "20, 40, 60, …", "note": "each world's last level is the hardest of its band — the climax the World-complete card pays off (NOT a breather)" }
   },
   "assists": {
     "freshHandOnLastLantern": { "enabled": false, "perLevel": 1, "note": "cut June 11, 2026 after device playtest - uncommon in genre, confused testers" },

@@ -117,10 +117,14 @@ function genLanterns(count, blocked) {
 }
 
 // ---------- slot plans ----------
-// Counts leave room for the kit levels that join each band's pool:
-// A: kit 1-4 pinned + 5 generated movable + breather at 10  → 10 slots
-// B: 15 generated + kit 5-7 movable + breathers at 20, 30   → 20 slots
-// C: 24 generated + kit 8-10 movable + breathers 40, 50, 60 → 30 slots
+// Worlds are 20 levels; each ramps to a CLIMAX. Breathers (archetype A, easy
+// relief) sit at world MIDPOINTS (10, 30, 50); world FINALES (20, 40, 60) are
+// the hardest of their band — the level the World-complete card pays off. So a
+// movable pool fills the finale slots with the toughest generated boards.
+// Counts (incl. the kit levels that join each band's pool):
+// A: kit 1-4 pinned + 5 generated movable + breather at 10        → 10 slots
+// B: 16 generated + kit 5-7 movable, breather 30, PEAK at 20      → 20 slots
+// C: 26 generated + kit 8-10 movable, breather 50, PEAKS at 40,60 → 30 slots
 function slotPlans() {
   const plans = [];
   const archA = ["B", "C", "D", "B", "E"];        // gentle geometry for openers
@@ -129,21 +133,18 @@ function slotPlans() {
   plans.push({ key: "A-breather", band: "A", arch: "A", lanterns: 3, breather: true, pinId: 10 });
 
   const cycleB = ["B", "C", "D", "E", "F"];
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < 16; i++) {
     const lanterns = i < 5 ? 3 : (i < 10 ? 4 : 5);
     plans.push({ key: "B" + i, band: "B", arch: cycleB[i % cycleB.length], lanterns, breather: false });
   }
-  plans.push({ key: "B-breather-20", band: "B", arch: "A", lanterns: 3, breather: true, pinId: 20 });
   plans.push({ key: "B-breather-30", band: "B", arch: "A", lanterns: 4, breather: true, pinId: 30 });
 
   const cycleC = ["C", "D", "E", "F", "B"];
-  for (let i = 0; i < 24; i++) {
+  for (let i = 0; i < 26; i++) {
     const lanterns = i < 8 ? 4 : (i < 16 ? 5 : (rng() < 0.5 ? 5 : 6));
     plans.push({ key: "C" + i, band: "C", arch: cycleC[i % cycleC.length], lanterns, breather: false });
   }
-  plans.push({ key: "C-breather-40", band: "C", arch: "A", lanterns: 4, breather: true, pinId: 40 });
   plans.push({ key: "C-breather-50", band: "C", arch: "A", lanterns: 4, breather: true, pinId: 50 });
-  plans.push({ key: "C-breather-60", band: "C", arch: "A", lanterns: 5, breather: true, pinId: 60 });
   return plans;
 }
 
@@ -201,8 +202,10 @@ function main() {
       `win ${(g.winRate * 100).toFixed(0)}% par ${g.level.par}\n`);
   }
 
-  // Assemble: kit 1-4 pinned as openers; per band, movable levels (generated +
-  // kit transplants) sorted by win% descending; breathers pinned at 10s.
+  // Assemble: kit 1-4 pinned as openers; per band, breathers pin the world
+  // MIDPOINTS (10,30,50) and the HARDEST movable levels pin the world FINALES
+  // (20,40,60 — 60 the toughest of all). Remaining "body" slots take the rest
+  // sorted easy→hard, so each world eases in and ramps toward its climax.
   const out = [];
   for (const k of kit.slice(0, 4)) out.push(k);                       // positions 1-4
 
@@ -210,11 +213,13 @@ function main() {
   for (let id = 11; id <= 30; id++) SLOTS.B.push(id);
   for (let id = 31; id <= 60; id++) SLOTS.C.push(id);
   const KIT_POOL = { A: [], B: kit.slice(4, 7), C: kit.slice(7, 10) };
+  const BREATHER_ID = new Set([10, 30, 50]);
+  const FINALE_ID = new Set([20, 40, 60]);
 
   for (const band of ["A", "B", "C"]) {
     const movable = generated.filter(g => g.plan.band === band && !g.plan.breather)
                              .concat(KIT_POOL[band])
-                             .sort((a, b) => b.winRate - a.winRate);
+                             .sort((a, b) => b.winRate - a.winRate);   // [0] easiest … [last] hardest
     // avoid identical archetypes back to back where a cheap swap fixes it
     for (let i = 1; i < movable.length; i++) {
       if (movable[i].plan.arch !== movable[i - 1].plan.arch) continue;
@@ -225,11 +230,15 @@ function main() {
         break;
       }
     }
-    let m = 0;
-    for (const id of SLOTS[band]) {
-      const g = (id % 10 === 0) ? generated.find(x => x.plan.pinId === id) : movable[m++];
-      g.level.id = id;
-      out.push(g);
+    const finales = SLOTS[band].filter(id => FINALE_ID.has(id)).sort((a, b) => a - b);
+    const bodies = SLOTS[band].filter(id => !FINALE_ID.has(id) && !BREATHER_ID.has(id));
+    // pull the hardest N off the tail; the later finale gets the harder board (60 hardest)
+    const peaks = movable.splice(movable.length - finales.length, finales.length);
+    finales.forEach((id, i) => { peaks[i].level.id = id; peaks[i].plan.finale = true; out.push(peaks[i]); });
+    bodies.forEach((id, i) => { movable[i].level.id = id; out.push(movable[i]); });        // easy→hard
+    for (const id of SLOTS[band].filter(s => BREATHER_ID.has(s))) {
+      const g = generated.find(x => x.plan.pinId === id);
+      g.level.id = id; out.push(g);
     }
   }
   out.sort((a, b) => a.level.id - b.level.id);

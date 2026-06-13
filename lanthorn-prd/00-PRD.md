@@ -23,9 +23,11 @@ Static, hand-feel designed levels (Gen-2/3 per DoF's generational analysis — t
 | 1–10 | ≥97% | ≥85% | "I'm great at this" |
 | 11–30 | ≥93% | ≥70% | Gentle waves |
 | 31–60 | ≥88% | ≥55% | First real bumps, relief valleys after |
-| 61+ | 85% ±8 in waves | ≥40% | Waves, never walls; every 10th level is a breather |
+| 61+ | 85% ±8 in waves | ≥40% | Waves, never walls; each 20-level world ramps to a climax |
 
 *Bot is weaker than humans; bands set in `tuning.json`, validated by `greybox/bot-sim.cjs` over 100 seeds/level. Any level outside its band gets regenerated or hand-fixed — no exceptions.*
+
+**World-arc (added June 13, 2026).** Levels are chunked into 20-level worlds. Within each world the difficulty ramps to a climax: an archetype-A **breather at the midpoint** (10, 30, 50…) and the **hardest level at the finale** (20, 40, 60…), which the World-complete card pays off. This replaced "every 10th level is a breather" — that rule put the easiest level last, backwards from the genre (the last level of a chapter should be its toughest, the first should ease you in). Endless finales stay hard-but-always-winnable (floored at 0.42-bot) so a world boundary is never an impassable wall.
 
 Generosity rules: no lives, no energy, no timer anywhere; soft fail = instant free retry, same queue; win celebration > fail commiseration in juice budget 3:1. *(Amended June 11, 2026: the near-win "fresh hand" assist was cut after device playtesting — uncommon in the genre and confusing in every presentation tried; knob disabled in tuning.json, engine functions retained unused.)*
 

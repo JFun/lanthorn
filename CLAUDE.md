@@ -21,7 +21,10 @@ memory dir for this project — trust those over assumptions.
   (deterministic, master seed 20260611). Same for sounds: `python3 scripts/dev/gen_sounds.py`
   → `web/sounds/` (+ afconvert aac for bgm).
 - **Position-band law** (tuning.json): levels 1-10 band A (bot ≥85%), 11-30 B (≥70%),
-  31-60 C (≥55%); every 10th level = archetype-A breather; lanterns never all in one line.
+  31-60 C (≥55%); lanterns never all in one line. **World-arc law:** each 20-level world ramps
+  to a climax — archetype-A breather at the world MIDPOINT (10, 30, 50…), and the world FINALE
+  (20, 40, 60…) is the HARDEST level of its band (the level the World-complete card pays off).
+  NOT "every 10th easy" — that put the easiest level last, backwards from the genre (fixed June 13, 2026).
 - After self-test passes, **deploy to the iPhone without asking**: `scripts/dev/deploy_ios.sh`
   (test → cap sync → xcodebuild → devicectl install/launch; retries transient install failures).
 
@@ -75,15 +78,25 @@ geometry (padWalls → up to 14 blocked), and a descending target bot-win-rate (
 endless world → floor 0.32 far out), picking the candidate whose 10-run bot win-rate lands in a
 band around target. Verified: ~95% at L61 → 20-40% plateau by ~L213, holding through the deep
 tail; every level still solvable (authored-queue-winnable + all lanterns lightable), deterministic,
-generates in <35ms. Breathers (every 10th) stay easy relief valleys. NOTE: dev `wonThrough` must
+generates in <35ms (a finale costs more — it evaluates candidates at 28 runs to pick a real peak,
+~150ms, once per world, cached). Each world dips to an archetype-A breather at its MIDPOINT
+(70, 90…) and ends on its HARDEST level at the FINALE (80, 100…) — forced tight E/F geometry,
+min-picked hardest, floored at 0.42-bot so the climax is always winnable (an unfair finale =
+an impassable wall at a milestone). Finale is the #1–#5 hardest of its world through the realistic
+range; very deep, every level is hard so it reads as a fair-but-tough cap + the milestone payoff.
+NOTE: dev `wonThrough` must
 NOT call levelAt() on generated levels (generating hundreds to total the sky stalled 18s) — it
 sums curated exactly and estimates generated. Endgame = ENDLESS (decided June 12, 2026 after the replay/"caught-up" attempts felt like
 dead-ends; this is Block Blast's real model). Levels 1-60 are curated (`web/js/levels.js`);
 past that, `web/js/genLevel(n)` (`web/js/endless.js`) generates a board deterministically per
 level number — faithful port of `gen-levels.cjs` geometry, validated solvable + kind (band-C
-plateau, ≥0.6 bot in a 12-run check, every lantern lightable, breather every 10th). The
-odometer just keeps climbing ("Level 61"…), win card is always "Continue", and the sky fills
+plateau, ≥0.6 bot in a 12-run check, every lantern lightable, world-midpoint breather + hard
+world-finale). The odometer just keeps climbing ("Level 61"…), win card is "Continue" (or the
+World-complete card at a world's last level — see the design-system section), and the sky fills
 forever. There is NO all-won/replay/"see your sky" special state anymore. Sky count is a
 running counter `store.sky` (can't be summed from the 60-level table); migrated on load.
-Breather rule (every 10th level archetype-A) holds in both curated and generated ranges — don't
-tighten to every-5 with one mechanic.
+World-arc (midpoint breather, finale peak) holds in both curated and generated ranges — don't
+revert to "every 10th easy" (it made the climax the easiest level).
+KNOWN deep-tail issue (pre-existing, NOT from the world-arc work): a few body levels past ~world
+12 (level 240+) read <28% bot at high run-counts — 10-run gen noise leaking over-hard boards;
+finales are all fair. Far past realistic play; fix needs higher-run gen validation (vs the <35ms budget).

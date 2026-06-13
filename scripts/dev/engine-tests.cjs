@@ -172,7 +172,8 @@ section("levels.js data sanity");
     if (new Set(lv.lanterns.map(p => p[1])).size === 1) errs.push("all lanterns in one column");
     if (!Number.isInteger(lv.seed)) errs.push("seed");
     if (id > 10 && !(lv.par >= 3)) errs.push("par");
-    if (id > 10 && id % 10 === 0 && lv.archetype !== "A") errs.push("10th level not a breather");
+    if (id % 20 === 10 && lv.archetype !== "A") errs.push("world-midpoint not a breather (A)");
+    if (id % 20 === 0 && lv.archetype === "A") errs.push("world-finale is a breather, should be a peak");
     ok(errs.length === 0, `level ${id}: ${errs.join(", ")}`);
   });
   // generated levels: authored queue must be bot-winnable (kindness floor)
