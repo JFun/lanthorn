@@ -123,6 +123,16 @@
     });
   }
 
+  // Fully wipe a canvas in DEVICE pixels regardless of the current transform.
+  // iOS WKWebView can otherwise leave a vertical "trail" of a rising lantern's
+  // glow if a stale transform makes a CSS-space clearRect miss part of the
+  // backing store. Reset → clear backing → restore the DPR transform.
+  function clearFull(ctx, canvas) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+
   // A paper lantern, drawn in code. (x,y) = center, s = body height.
   function drawLantern(ctx, x, y, s, alpha, t) {
     if (!(s > 0.5) || !isFinite(x + y)) return;   // never feed bad radii to ellipse()
@@ -216,7 +226,7 @@
     last = t;
 
     // bg: stars + ambient lanterns
-    bgx.clearRect(0, 0, W, H);
+    clearFull(bgx, bg);
     bgx.fillStyle = starColor;
     for (let i = 0; i < starCount; i++) {
       const s = stars[i];
@@ -235,7 +245,7 @@
     }
 
     // fx: sparks + floaters
-    fxx.clearRect(0, 0, W, H);
+    clearFull(fxx, fx);
     for (let i = sparks.length - 1; i >= 0; i--) {
       const p = sparks[i];
       p.life += dt;
