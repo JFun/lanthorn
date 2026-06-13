@@ -157,9 +157,12 @@
     uiSlots = [0, 1, 2];
     $("nospace").classList.remove("show");
     hideOverlay();
-    // step into this level's world: reskin, and announce it if it's new
+    // step into this level's world: reskin, name it in the HUD, fill the
+    // world-progress bar (level-in-world / 20), and announce a new world.
     const pIdx = PLANETS.indexFor(i), p = PLANETS.planetFor(i);
     applyPlanet(p);
+    $("hudWorld").textContent = p.name;
+    $("worldfill").style.width = ((i % PLANETS.SIZE + 1) / PLANETS.SIZE * 100) + "%";
     if (pIdx !== shownPlanetIdx) { arrive(p); shownPlanetIdx = pIdx; }
     show("game");
     render();

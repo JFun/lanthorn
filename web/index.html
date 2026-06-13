@@ -22,7 +22,10 @@
 
   <section id="scr-game" class="screen">
     <div id="hud">
-      <span id="hudLevel"></span>
+      <span class="hudleft">
+        <span id="hudLevel"></span>
+        <span id="hudWorld"></span>
+      </span>
       <span id="hudDots"></span>
       <span id="hudMenuSlot"><span id="menuWrap">
         <button id="btnMenu" class="ghostbtn" title="Menu">
@@ -50,6 +53,7 @@
         </div>
       </span></span>
     </div>
+    <div id="worldbar"><i id="worldfill"></i></div>
     <div id="tut">Light a lantern — fill its row or column.</div>
     <div id="board"><div id="nospace">No space left</div></div>
     <div id="tray"></div>
