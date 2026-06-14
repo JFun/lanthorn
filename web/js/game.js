@@ -64,7 +64,7 @@
 
   // ---------- journey / planets ----------
   const PLANETS = globalThis.LANTHORN_PLANETS;
-  let shownPlanetIdx = -1;
+  let prevLevelIdx = null;        // last level entered this session (null on a cold load/relaunch)
   function applyPlanet(p) {                       // reskin the sky, walls & horizon-world
     const r = document.documentElement.style;
     r.setProperty("--night1", p.night1); r.setProperty("--night2", p.night2);
@@ -151,6 +151,13 @@
 
   function startLevel(i) {
     quitTelemetry();             // restarting mid-level also abandons a run
+    // Announce a world ONLY on a genuine change: a boundary crossed mid-play, or
+    // a cold entry (first play / app relaunch) that lands on a world's FIRST
+    // level. Resuming mid-world after a relaunch must NOT re-announce the world.
+    const enteringWorld = (prevLevelIdx === null)
+        ? (i % PLANETS.SIZE === 0)
+        : PLANETS.indexFor(i) !== PLANETS.indexFor(prevLevelIdx);
+    prevLevelIdx = i;
     levelIdx = i;
     g = E.newGame(levelAt(i));
     released.clear();
@@ -159,11 +166,11 @@
     hideOverlay();
     // step into this level's world: reskin, name it in the HUD, fill the
     // world-progress bar (level-in-world / 20), and announce a new world.
-    const pIdx = PLANETS.indexFor(i), p = PLANETS.planetFor(i);
+    const p = PLANETS.planetFor(i);
     applyPlanet(p);
     $("hudWorld").textContent = p.name;
     $("worldfill").style.width = ((i % PLANETS.SIZE + 1) / PLANETS.SIZE * 100) + "%";
-    if (pIdx !== shownPlanetIdx) { arrive(p); shownPlanetIdx = pIdx; }
+    if (enteringWorld) arrive(p);
     show("game");
     render();
     SDK.gameplayStart();
