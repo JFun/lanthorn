@@ -602,6 +602,8 @@
       }
       startLevel(n - 1);
       if (shot === "win") {                            // light it and pop the win / world card
+        FX.celebrate = function () {};                 // clean shot: no spark specks…
+        FX.floatLantern = function () {};              // …and no bloom lanterns over the card
         g.lanterns.forEach(l => l.lit = true); g.over = true; g.won = true;
         render(); showEnd();
       }
