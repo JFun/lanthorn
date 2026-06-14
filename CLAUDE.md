@@ -67,7 +67,11 @@ horizon-world colors, ~20 levels/world, curated 60 = first 3 worlds Tier 1). Eac
 pure-CSS RESKIN (sky gradient via --night1/2, walls via --wall1/2/3, the horizon orb via
 --world1/2) — §0-legal: NO new rules, the paper lantern stays warm gold (constant hero). Sky
 screen shows the current world rising on the horizon (#skyworld) + its name; entering a new
-world fires a textless arrival card (#planetcard). The night sky is PER-PLANET: lanterns counted
+world fires a textless arrival card (#planetcard) — but ONLY on an in-play world crossing
+(won a world's last level → Continue → next world); a cold start / app relaunch is silent at
+every level, and a brand-new user gets NO card on level 1 (owner-decided June 13, 2026: the
+card is a travel REWARD, not an intro — level 1 stays focused on the puzzle + one tutorial line;
+HUD names the world). Don't re-add a new-user welcome card. The night sky is PER-PLANET: lanterns counted
 per world in `store.skyByWorld` (worldIndex→count), NOT one global total — each planet has its
 own sky that fills over its 20 levels. The home-screen background draws a "travel trail"
 (FX.setJourney) of world-orbs winding up through the night. Atlas now 10 named worlds + the Moon
