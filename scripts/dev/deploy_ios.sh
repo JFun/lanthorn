@@ -17,6 +17,15 @@ scripts/dev/test.sh
 echo "— cap sync (web → ios/App/App/public) —"
 npx cap sync ios 2>&1 | tail -2
 
+# Bust WKWebView's HTTP cache: an install-over keeps the app's data container, so
+# WKWebView can serve STALE js/css (URLs unchanged) until the next uninstall —
+# that's how a code fix can "not take" on device. Stamp the BUNDLED index.html's
+# asset URLs with a per-build token (web/ stays pristine) so every build is fresh.
+echo "— cache-bust bundled assets —"
+STAMP="$(date +%s)"
+sed -i '' -E 's#(src="js/[a-z-]+\.js)"#\1?v='"$STAMP"'"#g; s#(href="style\.css)"#\1?v='"$STAMP"'"#g' ios/App/App/public/index.html
+echo "  stamped ?v=$STAMP"
+
 echo "— build ($CONFIG) —"
 xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration "$CONFIG" \
   -destination 'generic/platform=iOS' -derivedDataPath ios/App/build/derived \
