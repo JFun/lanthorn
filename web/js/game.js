@@ -151,12 +151,12 @@
 
   function startLevel(i) {
     quitTelemetry();             // restarting mid-level also abandons a run
-    // Announce a world ONLY on a genuine change: a boundary crossed mid-play, or
-    // a cold entry (first play / app relaunch) that lands on a world's FIRST
-    // level. Resuming mid-world after a relaunch must NOT re-announce the world.
-    const enteringWorld = (prevLevelIdx === null)
-        ? (i % PLANETS.SIZE === 0)
-        : PLANETS.indexFor(i) !== PLANETS.indexFor(prevLevelIdx);
+    // Announce a world ONLY when you cross into it DURING play (won a world's
+    // last level → Continue → next world). A cold start / app relaunch never
+    // announces — prevLevelIdx is null on a fresh load, so resuming at any level
+    // (mid-world OR a world's first level) stays silent; the HUD names the world.
+    const enteringWorld = prevLevelIdx !== null
+        && PLANETS.indexFor(i) !== PLANETS.indexFor(prevLevelIdx);
     prevLevelIdx = i;
     levelIdx = i;
     g = E.newGame(levelAt(i));
