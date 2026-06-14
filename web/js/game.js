@@ -583,4 +583,28 @@
   show("title");
   if (store.bgm) Snd.bgmOn();   // native: starts now; web: after first gesture
   SDK.loadingStop();
+
+  // ---------- screenshot harness (App Store assets) ----------
+  // ?shot=<state>&n=<level> drives the game to a fixed visual state on load so a
+  // headless browser can capture pixel-exact store shots. Inert without ?shot, so
+  // it never affects real play (a user never has the param). See scripts/dev/shots.sh.
+  (function () {
+    const q = new URLSearchParams(location.search);
+    const shot = q.get("shot");
+    if (!shot) return;
+    const n = parseInt(q.get("n") || "7", 10);
+    document.body.classList.add("shooting");          // CSS hides the dev bar/cursor
+    setTimeout(() => {
+      if (shot === "title") { show("title"); return; }
+      if (shot === "sky") {                            // seed a partly-filled sky so it glows
+        if (!skyOf(0)) { store.skyByWorld[0] = 42; }
+        show("sky"); return;
+      }
+      startLevel(n - 1);
+      if (shot === "win") {                            // light it and pop the win / world card
+        g.lanterns.forEach(l => l.lit = true); g.over = true; g.won = true;
+        render(); showEnd();
+      }
+    }, 220);
+  })();
 })();

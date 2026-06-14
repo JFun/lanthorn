@@ -344,6 +344,10 @@ button.ghostbtn {
 }
 #overlay button.primary.wide { display: block; width: 100%; padding: 14px 0; font-size: 17px; border-radius: 14px; }
 
+/* screenshot harness (?shot=…): keep store captures clean */
+.shooting #devbar { display: none !important; }
+.shooting, .shooting * { cursor: none !important; }
+
 /* ---------- meta navigation (two surfaces, no bar) ---------- */
 .skybtn {
   display: inline-flex; align-items: center; gap: 9px;
