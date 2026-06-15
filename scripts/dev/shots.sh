@@ -27,7 +27,7 @@ shoot() {
     --force-device-scale-factor="$s" --window-size="$w,$h" \
     --virtual-time-budget=2600 --user-data-dir="$TMP/$name" \
     --screenshot="$OUT/$name.png" \
-    "http://localhost:$PORT/?shot=$state&n=$n" >/dev/null 2>&1 &
+    "http://localhost:$PORT/?shot=$state&n=$n&w=$w" >/dev/null 2>&1 &
   local cpid=$!
   sleep 5; kill "$cpid" 2>/dev/null; wait "$cpid" 2>/dev/null
   local dim
