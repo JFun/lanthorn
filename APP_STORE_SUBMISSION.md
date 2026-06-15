@@ -11,10 +11,11 @@ Legend: `[x]` done · `[~]` I can do (Claude) · `[ ]` you (owner, in App Store 
 
 - [ ] **Fun gate** (PRD §4) — 10 testers on levels 1-20; pass = >=8 finish 10 levels AND >=6 ask for more. This is the real go/no-go. *(I can publish the web build to a shareable URL for testers.)*
 - [ ] **USPTO trademark check** on "Lanthorn" — *preliminary knockout search done, clear so far:* no exact "Lanthorn" mark in the USPTO database (per Justia/Trademarkia mirrors) and no App Store app named Lanthorn. Two things to confirm at [tmsearch.uspto.gov](https://tmsearch.uspto.gov/): (1) existing **LANTERN** marks — "Lanthorn" is the archaic spelling of "lantern", so check for LIVE LANTERN marks in **Class 009** (game software) / **041** (online games); (2) "Lanthorn" is used as a business name in *other* fields (a branding studio, a monitoring-software co, an AI-camera co) — field-specific, so likely fine for a game. Not legal advice; this is a knockout search, not a full clearance. Backups: Lanternrise, Glowmoor.
-- [ ] **Enable GitHub Pages** → repo Settings → Pages → Branch `main`, Folder `/docs`, Save. Wait ~1-2 min. This makes the Privacy + Support URLs live. Then verify both return 200:
+- [ ] **Enable GitHub Pages** (code is now pushed to `main`, so this is ready) → repo Settings → Pages → Branch `main`, Folder `/docs`, Save. Wait ~1-2 min. This makes the Privacy + Support URLs live. Then verify both return 200:
   - `https://jfun.github.io/lanthorn/privacy.html`
   - `https://jfun.github.io/lanthorn/support.html`
-- [ ] **Confirm the App Store Connect app record** exists for `com.jfun.lanthorn` (App Store Connect → My Apps). If not, create it (Apps → + → New App): platform iOS, name "Lanthorn", primary language English (U.S.), bundle ID, an SKU (e.g. `lanthorn-ios`).
+- [ ] **Register the App ID** (do this first if the bundle ID isn't already registered): [developer.apple.com → Identifiers → +](https://developer.apple.com/account/resources/identifiers/bundleId/add/bundle) → App IDs → App → Description `Lanthorn`, Bundle ID **Explicit** `com.jfun.lanthorn`, team `Y3T546NP6T`, **enable NO capabilities** → Continue → Register. *(The app needs zero App ID capabilities — verified: only Firebase Analytics + native audio/haptics, none of which require one. No push, Sign in with Apple, Game Center, App Groups, or associated domains.)*
+- [ ] **Create the App Store Connect app record:** [App Store Connect → Apps](https://appstoreconnect.apple.com/apps) → ➕ → **New App** → iOS · Name `Lanthorn` · English (U.S.) · Bundle ID `com.jfun.lanthorn` (appears in the dropdown once the App ID above exists) · SKU `lanthorn-ios` · Full Access → **Create**. No metadata needed to create the shell record. Use the `Qili Chen - Y3T546NP6T` team (not a free/personal team).
 
 ---
 
@@ -176,9 +177,14 @@ Profile: Firebase Analytics only. No ads, no Google Signals, no IAP, no accounts
 ## Status snapshot (as of this session)
 
 Done: privacy + support HTML pages (`docs/`), 8 centered screenshots, icon no-alpha,
-encryption key, v1.0/build 1, native Firebase Analytics live.
+encryption key, v1.0/build 1, native Firebase Analytics live, ASO metadata drafted
+(§ASO), trademark knockout preliminary-clear (§0), and **code pushed to the public
+GitHub repo** (Firebase `GoogleService-Info.plist` purged from history + gitignored;
+it lives on disk for builds, never in the repo).
 
-Blocking on you: fun gate, USPTO check, enable GitHub Pages, confirm/create the ASC
-app record (+ Xcode account). Once the record exists, I run the TestFlight upload.
+Blocking on you: fun gate, USPTO confirm (~5 min on tmsearch.uspto.gov), enable GitHub
+Pages (now ready), register the App ID + create the ASC app record. Once the app record
+exists (Xcode is already signed into the team from your deploys), I run the TestFlight
+upload (bump build → archive → upload).
 
 Not an App Store blocker but pending: web GA measurement ID (the CrazyGames-channel gate).
