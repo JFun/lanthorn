@@ -127,9 +127,17 @@
   }
 
   // ---------- layout ----------
-  function layout() {
+  function layout(forceW) {
+    // Board visual width = 8*cell + 7*gap(3) + 2*pad(10) = 8*cell + 41, and it
+    // sits inside .screen's 14px horizontal padding (28 total). Reserve all of it
+    // plus a safety margin so the board fits WITH real side margins — the old
+    // `- 44` left only ~2px, which clipped the right edge on a 390pt iPhone.
+    // forceW (screenshot harness only) sizes for a fixed width since headless
+    // Chrome reports a viewport that doesn't match its --window-size.
+    const w = (typeof forceW === "number" && forceW > 0) ? forceW : innerWidth;
+    const RESERVE = 28 /* screen padding */ + 41 /* board chrome */ + 6 /* breath */;
     const cell = Math.max(30, Math.min(52,
-      Math.floor((innerWidth - 44) / N),
+      Math.floor((w - RESERVE) / N),
       Math.floor((innerHeight - 252) / N)));
     document.documentElement.style.setProperty("--cell", cell + "px");
   }
@@ -506,7 +514,7 @@
 
   document.addEventListener("contextmenu", e => { if (current === "game") e.preventDefault(); });
   window.addEventListener("pagehide", quitTelemetry);   // closing the tab mid-level counts too
-  window.addEventListener("resize", layout);
+  window.addEventListener("resize", () => layout());   // ignore the event arg (forceW must be a number)
   window.addEventListener("keydown", e => {
     if (!DEBUG || current !== "game") return;
     if (e.key === "n") startLevel(levelIdx + 1);           // endless — no upper bound
@@ -594,7 +602,15 @@
     if (!shot) return;
     const n = parseInt(q.get("n") || "7", 10);
     document.body.classList.add("shooting");          // CSS hides the dev bar/cursor
+    const fw = parseInt(q.get("w"), 10) || 0;          // headless viewport ≠ --window-size; pin the
+    if (fw) {                                          // page to the captured width so content centers
+      document.documentElement.style.width = fw + "px";
+      document.body.style.width = fw + "px";
+      document.body.style.margin = "0";
+      document.body.style.overflow = "hidden";
+    }
     setTimeout(() => {
+      layout(fw || undefined);                         // size the board for the captured width
       if (shot === "title") { show("title"); return; }
       if (shot === "sky") {                            // seed a partly-filled sky so it glows
         if (!skyOf(0)) { store.skyByWorld[0] = 42; }
