@@ -18,10 +18,50 @@ Legend: `[x]` done · `[~]` I can do (Claude) · `[ ]` you (owner, in App Store 
 
 ---
 
+## ASO (App Store Optimization) — read before filling §1-§3
+
+**Positioning:** Do NOT compete head-on for "block puzzle" — Block Blast / 1010 / Woody
+own it and a new app can't rank there. Lanthorn's winnable lane is the **cozy / relaxing /
+lantern** niche. Lean every text field and screenshot into: calm, no-pressure, lanterns,
+light, cozy worlds, night sky.
+
+**How iOS search actually works (different from Google Play):**
+- Apple indexes only the **App Name + Subtitle + Keyword field** — NOT the description. So
+  keywords live in those three; the description is purely for conversion.
+- Apple **auto-combines** words across all three fields (name "cozy"+"block"+"puzzle" =>
+  ranks for "cozy block puzzle"). So **never repeat a word** across name/subtitle/keywords — a
+  repeat is a wasted slot.
+- Keyword field: **no spaces** (commas only, every char counts), **singular forms** (Apple
+  matches plurals), and **omit** your app name, "app", "game", and your category — Apple adds
+  those automatically.
+- **No competitor brand names** (Block Blast, 1010, Woody) — Apple may reject for trademark and
+  it draws bad-fit users. Keep every keyword **relevant** (irrelevant terms like "wood"/"merge"
+  can trigger rejection and hurt retention signals that feed ranking).
+
+**Free keyword multiplier — extra English locales:** add **English (U.K.)**, **English
+(Australia)**, **English (Canada)** localizations. Each gives another Name + Subtitle +
+100-char keyword field to index. Reuse the same screenshots/description; just vary the keywords
+(e.g. soothing, calming, brain teaser, time killer, unwind, before bed). Big free coverage win.
+
+**Conversion levers (after they find it):**
+- **Screenshots** are the #1 lever and the first 1-2 show in search results. Our current set is
+  raw gameplay — add short benefit captions ("Light every lantern", "Drift through cozy
+  worlds", "No timers. No pressure."). *(I can produce captioned versions.)*
+- **Ratings** drive both rank and conversion — add an in-app rating prompt
+  (SKStoreReviewController) after ~3-5 wins. *(Small code add; I can do it.)*
+- **Icon** must read at thumbnail size against a sea of bright block grids — the warm glowing
+  lantern on dark is differentiated; keep it bold and simple.
+- **App preview video** (15-30s) is optional but lifts conversion further.
+
+**Post-launch:** ASO is iterative — the keyword field can change every version. Watch which
+terms bring installs (ASC Analytics) and swap the weak ones each update.
+
+---
+
 ## 1. App information (App Store Connect → App Information)
 
-- [ ] **Name:** Lanthorn
-- [ ] **Subtitle (<=30 chars):** `A cozy block-light puzzle`
+- [ ] **App Store name (<=30):** `Lanthorn: Cozy Block Puzzle` — keyword-bearing. (The name shown under the icon on the device stays `Lanthorn` via CFBundleDisplayName; only the *Store* name carries keywords.)
+- [ ] **Subtitle (<=30):** `Relax with calm lantern lights` — deliberately uses *different* words than the name (relax, calm, lantern, lights).
 - [ ] **Category:** Primary = Games > Puzzle. Secondary (optional) = Games > Casual.
 - [ ] **Content rights:** does not use third-party content → No.
 - [ ] **Age rating:** answer all questionnaire items **None / No** → results in **4+**.
@@ -54,10 +94,12 @@ Legend: `[x]` done · `[~]` I can do (Claude) · `[ ]` you (owner, in App Store 
   A calm puzzle for a quiet moment. Light a lantern, fill the sky.
   ```
 
-- [ ] **Keywords (<=100 chars, comma-separated, no spaces):**
+- [ ] **Keywords (<=100, comma-separated, NO spaces, singular, none repeating the name/subtitle):**
   ```
-  block,puzzle,lantern,cozy,relax,calm,zen,brain,logic,grid,blocks,offline,casual,night,sky
+  zen,brain,logic,grid,offline,casual,night,sky,glow,unwind,quiet,mindful,tiles,lamp,star,evening
   ```
+  *(Note: `cozy, block, puzzle, relax, calm, lantern, light` are intentionally absent here — they're
+  already in the name/subtitle and Apple combines across fields. Adjust as ASC Analytics shows what ranks.)*
 
 - [ ] **Copyright:** `2026 JFun`
 - [ ] **Marketing URL (optional):** leave blank or the support URL.
