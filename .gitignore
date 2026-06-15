@@ -9,3 +9,6 @@ DerivedData/
 
 # local-only Claude settings (launch.json is shared)
 .claude/settings.local.json
+
+# Firebase config (keep out of the public repo; lives on disk for builds)
+GoogleService-Info.plist
