@@ -1,0 +1,142 @@
+# Lanthorn — App Store Submission Checklist
+
+Bundle `com.jfun.lanthorn` · Apple team `Y3T546NP6T` (tbcql1986@gmail.com) ·
+Universal (iPhone + iPad) · v1.0.
+
+Legend: `[x]` done · `[~]` I can do (Claude) · `[ ]` you (owner, in App Store Connect / external)
+
+---
+
+## 0. Pre-submission gates (do these first)
+
+- [ ] **Fun gate** (PRD §4) — 10 testers on levels 1-20; pass = >=8 finish 10 levels AND >=6 ask for more. This is the real go/no-go. *(I can publish the web build to a shareable URL for testers.)*
+- [ ] **USPTO trademark check** on "Lanthorn" (~10 min) before the public listing. Backups: Lanternrise, Glowmoor.
+- [ ] **Enable GitHub Pages** → repo Settings → Pages → Branch `main`, Folder `/docs`, Save. Wait ~1-2 min. This makes the Privacy + Support URLs live. Then verify both return 200:
+  - `https://jfun.github.io/lanthorn/privacy.html`
+  - `https://jfun.github.io/lanthorn/support.html`
+- [ ] **Confirm the App Store Connect app record** exists for `com.jfun.lanthorn` (App Store Connect → My Apps). If not, create it (Apps → + → New App): platform iOS, name "Lanthorn", primary language English (U.S.), bundle ID, an SKU (e.g. `lanthorn-ios`).
+
+---
+
+## 1. App information (App Store Connect → App Information)
+
+- [ ] **Name:** Lanthorn
+- [ ] **Subtitle (<=30 chars):** `A cozy block-light puzzle`
+- [ ] **Category:** Primary = Games > Puzzle. Secondary (optional) = Games > Casual.
+- [ ] **Content rights:** does not use third-party content → No.
+- [ ] **Age rating:** answer all questionnaire items **None / No** → results in **4+**.
+- [ ] **Privacy Policy URL:** `https://jfun.github.io/lanthorn/privacy.html`
+- [ ] **Support URL:** `https://jfun.github.io/lanthorn/support.html`
+
+---
+
+## 2. Version metadata (the version page — copy/paste below)
+
+- [ ] **Promotional text (<=170):**
+  > Light lanterns, fill your night sky, and drift through warm little worlds. A calm block puzzle with no timers and nothing to buy.
+
+- [ ] **Description (<=4000, plain ASCII — no markdown, no em-dashes/box characters):**
+  ```
+  Lanthorn is a cozy block puzzle about light.
+
+  Drag pieces onto the board and fill a complete row or column through a lantern
+  to light it. Light every lantern to finish a level, then travel outward through
+  warm, hand-made worlds as your night sky slowly fills with light.
+
+  That is the whole game. One simple move, nothing to memorize.
+
+  - No timers and no pressure. Play at your own pace.
+  - No accounts and no sign-in. Just open and play.
+  - No ads interrupting you, and nothing to buy.
+  - Fully playable offline.
+  - Levels that gently grow with you, plus an endless journey beyond.
+
+  A calm puzzle for a quiet moment. Light a lantern, fill the sky.
+  ```
+
+- [ ] **Keywords (<=100 chars, comma-separated, no spaces):**
+  ```
+  block,puzzle,lantern,cozy,relax,calm,zen,brain,logic,grid,blocks,offline,casual,night,sky
+  ```
+
+- [ ] **Copyright:** `2026 JFun`
+- [ ] **Marketing URL (optional):** leave blank or the support URL.
+
+---
+
+## 3. Visual assets
+
+- [x] **App icon 1024x1024, no alpha** — already in the build's asset catalog (`hasAlpha: no` verified).
+- [x] **Screenshots** — in `screenshots/appstore/` (drag into the version's "Previews and Screenshots"):
+  - iPhone 6.9"/6.5" slot (1242x2688): `iphone65_1_play` `iphone65_2_win` `iphone65_3_sky` `iphone65_4_title`
+  - iPad 13" slot (2048x2732): `ipad13_1_play` `ipad13_2_win` `ipad13_3_sky` `ipad13_4_title`
+- [ ] App preview video — optional, skipping.
+
+> Note: Apple now also accepts/asks for the 6.9" iPhone size (1290x2796). Our 6.5" (1242x2688) set is still accepted; if ASC requires 6.9", say the word and I'll re-render that size (one line in `scripts/dev/shots.py`).
+
+---
+
+## 4. Build (TestFlight) — I can run this
+
+- [~] **Bump build number** (`CURRENT_PROJECT_VERSION`) — must be unique per upload.
+- [~] **Archive (Release) + upload to TestFlight** via `xcodebuild archive` + `-exportArchive` with `destination=upload` (uses Xcode's signed-in Apple ID — no API key).
+- [x] **Encryption compliance** — `ITSAppUsesNonExemptEncryption=false` already in Info.plist (no prompt).
+- [ ] **Processing** — wait ~5-15 min after upload; Apple emails when ready.
+- [ ] **Select the build** on the version page (Build section).
+
+> Precondition I need from you: the ASC app record must exist (gate 0) AND Xcode must be signed into the Apple ID that owns team Y3T546NP6T (Xcode → Settings → Accounts, App Manager/Admin role). Then I run the upload.
+
+---
+
+## 5. App Privacy (App Store Connect → App Privacy) — must match privacy.html
+
+Profile: Firebase Analytics only. No ads, no Google Signals, no IAP, no accounts, no Crashlytics.
+
+- [ ] **Data collected → Usage Data → Product Interaction**
+  - Linked to the user? **No**
+  - Used for tracking? **No**
+  - Purpose: **Analytics**
+- [ ] (Only if a reviewer flags a mismatch) add **Identifiers → Device ID**, also Linked=No, Tracking=No, Analytics.
+- [ ] **Do NOT** check Advertising Data, Crash Data, Performance Data, or Location.
+- [ ] Tracking = **No** across the board → **no ATT prompt** required (the app does not meet Apple's definition of tracking).
+
+---
+
+## 6. Review information (version page → App Review Information)
+
+- [ ] **Sign-in required:** No.
+- [ ] **Contact:** first/last name, phone, email (tbcql1986@gmail.com).
+- [ ] **Notes** (paste this — pre-empts the common 2.1 "information needed" reply):
+  ```
+  1. Purpose & audience: Lanthorn is a single-player cozy block puzzle for a
+     general audience. Drag pieces onto a grid, fill a lantern's row or column to
+     light it, and progress through levels.
+  2. How to use: open the app and tap Play. Drag pieces from the tray to the board.
+     No login, no accounts, and no in-app purchases.
+  3. Devices tested: iPhone 13 Pro (iOS 18.x), iPad (iPadOS 18.x).
+  4. External services: Firebase Analytics (Google) for anonymous gameplay events
+     only. No backend, authentication, payment, ads, or AI services.
+  5. Regional differences: none. English-only UI, identical worldwide.
+  6. Regulated industry / protected content: none.
+  7. Demo account: not applicable (no accounts).
+  ```
+
+---
+
+## 7. Submit
+
+- [ ] Set version release option (Manual is safest for a first launch).
+- [ ] Click **Add for Review** / **Submit**.
+- [ ] First-time apps often get a 2.1 "Information Needed" reply regardless — the Notes above usually satisfy it; attach a 30-60s screen recording if asked.
+
+---
+
+## Status snapshot (as of this session)
+
+Done: privacy + support HTML pages (`docs/`), 8 centered screenshots, icon no-alpha,
+encryption key, v1.0/build 1, native Firebase Analytics live.
+
+Blocking on you: fun gate, USPTO check, enable GitHub Pages, confirm/create the ASC
+app record (+ Xcode account). Once the record exists, I run the TestFlight upload.
+
+Not an App Store blocker but pending: web GA measurement ID (the CrazyGames-channel gate).
