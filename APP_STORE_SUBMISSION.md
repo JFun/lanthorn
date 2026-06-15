@@ -119,15 +119,17 @@ terms bring installs (ASC Analytics) and swap the weak ones each update.
 
 ---
 
-## 4. Build (TestFlight) — I can run this
+## 4. Build (TestFlight)
 
-- [~] **Bump build number** (`CURRENT_PROJECT_VERSION`) — must be unique per upload.
-- [~] **Archive (Release) + upload to TestFlight** via `xcodebuild archive` + `-exportArchive` with `destination=upload` (uses Xcode's signed-in Apple ID — no API key).
-- [x] **Encryption compliance** — `ITSAppUsesNonExemptEncryption=false` already in Info.plist (no prompt).
-- [ ] **Processing** — wait ~5-15 min after upload; Apple emails when ready.
-- [ ] **Select the build** on the version page (Build section).
+- [x] **First build uploaded** — v1.0 (build 2) uploaded to App Store Connect ✅ (June 14, 2026). One-shot script: `scripts/dev/upload_testflight.sh` (self-test → bump build → cap sync + cache-bust → archive → export & upload via Xcode's signed-in Apple ID; auto-increments the build number each run).
+- [x] **Encryption compliance** — `ITSAppUsesNonExemptEncryption=false` in Info.plist (no prompt).
+- [x] **iPad orientation fix** — added `UIRequiresFullScreen=YES` to Info.plist. *(Required: a Universal app that's portrait-only must declare full-screen, else upload is rejected with "you need to include all … orientations to support iPad multitasking.")*
+- [ ] **Processing** — wait ~5-15 min; Apple emails when the build is ready (or if it fails processing).
+- [ ] **Missing Compliance?** — if TestFlight shows it on the build, click → "None of the above" (we already set the Info.plist flag, so it usually won't ask).
+- [ ] **Select the build** on the version page → Build section (after processing finishes).
+- [ ] **Internal testers** — add yourself/team under TestFlight → Internal Testing; installable immediately once processed (no Beta App Review). External testers need Beta App Review (~24h first time).
 
-> Precondition I need from you: the ASC app record must exist (gate 0) AND Xcode must be signed into the Apple ID that owns team Y3T546NP6T (Xcode → Settings → Accounts, App Manager/Admin role). Then I run the upload.
+> Subsequent uploads: just run `scripts/dev/upload_testflight.sh` again (it bumps the build number); commit the pbxproj bump after.
 
 ---
 

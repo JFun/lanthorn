@@ -12,3 +12,6 @@ DerivedData/
 
 # Firebase config (keep out of the public repo; lives on disk for builds)
 GoogleService-Info.plist
+
+# Xcode archives / export output
+build/
