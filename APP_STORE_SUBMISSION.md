@@ -10,7 +10,7 @@ Legend: `[x]` done · `[~]` I can do (Claude) · `[ ]` you (owner, in App Store 
 ## 0. Pre-submission gates (do these first)
 
 - [ ] **Fun gate** (PRD §4) — 10 testers on levels 1-20; pass = >=8 finish 10 levels AND >=6 ask for more. This is the real go/no-go. *(I can publish the web build to a shareable URL for testers.)*
-- [ ] **USPTO trademark check** on "Lanthorn" (~10 min) before the public listing. Backups: Lanternrise, Glowmoor.
+- [ ] **USPTO trademark check** on "Lanthorn" — *preliminary knockout search done, clear so far:* no exact "Lanthorn" mark in the USPTO database (per Justia/Trademarkia mirrors) and no App Store app named Lanthorn. Two things to confirm at [tmsearch.uspto.gov](https://tmsearch.uspto.gov/): (1) existing **LANTERN** marks — "Lanthorn" is the archaic spelling of "lantern", so check for LIVE LANTERN marks in **Class 009** (game software) / **041** (online games); (2) "Lanthorn" is used as a business name in *other* fields (a branding studio, a monitoring-software co, an AI-camera co) — field-specific, so likely fine for a game. Not legal advice; this is a knockout search, not a full clearance. Backups: Lanternrise, Glowmoor.
 - [ ] **Enable GitHub Pages** → repo Settings → Pages → Branch `main`, Folder `/docs`, Save. Wait ~1-2 min. This makes the Privacy + Support URLs live. Then verify both return 200:
   - `https://jfun.github.io/lanthorn/privacy.html`
   - `https://jfun.github.io/lanthorn/support.html`
