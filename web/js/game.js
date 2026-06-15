@@ -602,20 +602,11 @@
     if (!shot) return;
     const n = parseInt(q.get("n") || "7", 10);
     document.body.classList.add("shooting");          // CSS hides the dev bar/cursor
-    const fw = parseInt(q.get("w"), 10) || 0;          // headless viewport ≠ --window-size; pin the
-    if (fw) {                                          // page to the captured width so content centers
-      document.documentElement.style.width = fw + "px";
-      document.body.style.width = fw + "px";
-      document.body.style.margin = "0";
-      document.body.style.overflow = "hidden";
-    }
-    setTimeout(() => {
-      layout(fw || undefined);                         // size the board for the captured width
+    store.won = []; store.skyByWorld = {};            // deterministic: every shot starts from fresh
+    setTimeout(() => {                                 // progress (so a win shot is always a first-clear)
+      layout();
       if (shot === "title") { show("title"); return; }
-      if (shot === "sky") {                            // seed a partly-filled sky so it glows
-        if (!skyOf(0)) { store.skyByWorld[0] = 42; }
-        show("sky"); return;
-      }
+      if (shot === "sky") { store.skyByWorld[0] = 42; show("sky"); return; }   // seed a glowing sky
       startLevel(n - 1);
       if (shot === "win") {                            // light it and pop the win / world card
         FX.celebrate = function () {};                 // clean shot: no spark specks…
